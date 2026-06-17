@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Water Supply Support</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+body{
+
+min-height:100vh;
+
+background:
+linear-gradient(
+135deg,
+#EAF8FF 0%,
+#D6F3FF 30%,
+#BEEBFF 60%,
+#EAF8FF 100%
+);
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+padding:20px;
+overflow-x:hidden;
+position:relative;
+}
+
+/* Floating Water Glow */
+
+.glow1,
+.glow2,
+.glow3{
+position:fixed;
+border-radius:50%;
+filter:blur(100px);
+z-index:0;
+pointer-events:none;
+}
+
+.glow1{
+width:500px;
+height:500px;
+background:#48CAE4;
+top:-150px;
+left:-150px;
+opacity:.25;
+}
+
+.glow2{
+width:400px;
+height:400px;
+background:#00B4D8;
+bottom:-120px;
+right:-120px;
+opacity:.2;
+}
+
+.glow3{
+width:300px;
+height:300px;
+background:#90E0EF;
+top:40%;
+left:55%;
+opacity:.15;
+}
+
+/* Wave */
+
+.wave{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+height:220px;
+
+background:
+radial-gradient(
+ellipse at center,
+rgba(0,180,216,.25),
+transparent 70%
+);
+
+pointer-events:none;
+z-index:0;
+}
+
+/* Main Container */
+
+.container{
+width:100%;
+max-width:550px;
+position:relative;
+z-index:10;
+}
+
+/* Header */
+
+.badge{
+display:inline-flex;
+align-items:center;
+gap:8px;
+
+background:#ffffff;
+border:1px solid rgba(0,119,182,.15);
+
+padding:10px 18px;
+
+border-radius:50px;
+
+font-size:.75rem;
+font-weight:700;
+
+color:#0077B6;
+
+margin-bottom:20px;
+}
+
+.badge span{
+width:8px;
+height:8px;
+background:#00B4D8;
+border-radius:50%;
+}
+
+h1{
+font-size:clamp(2rem,6vw,3rem);
+font-weight:800;
+color:#023047;
+margin-bottom:10px;
+}
+
+.sub{
+color:#4A6C7A;
+line-height:1.7;
+margin-bottom:30px;
+}
+
+/* Card */
+
+.card{
+
+background:rgba(255,255,255,.92);
+
+backdrop-filter:blur(18px);
+
+border:1px solid rgba(0,180,216,.15);
+
+border-radius:24px;
+
+padding:35px;
+
+box-shadow:
+0 15px 40px rgba(0,119,182,.10),
+0 5px 15px rgba(0,0,0,.05);
+
+}
+
+/* Fields */
+
+.field{
+margin-bottom:20px;
+}
+
+.label{
+display:block;
+font-size:.75rem;
+font-weight:700;
+color:#0077B6;
+margin-bottom:8px;
+text-transform:uppercase;
+letter-spacing:1px;
+}
+
+.input-wrap{
+position:relative;
+}
+
+.input-wrap i{
+position:absolute;
+left:15px;
+top:50%;
+transform:translateY(-50%);
+color:#0077B6;
+}
+
+.textarea-wrap i{
+top:18px;
+transform:none;
+}
+
+input,
+textarea{
+
+width:100%;
+
+padding:14px 14px 14px 45px;
+
+border:1px solid #CFEFFF;
+
+border-radius:12px;
+
+font-size:.95rem;
+
+background:#fff;
+
+outline:none;
+
+transition:.3s;
+}
+
+textarea{
+resize:none;
+height:130px;
+}
+
+input:focus,
+textarea:focus{
+border-color:#0096C7;
+box-shadow:0 0 0 4px rgba(0,150,199,.12);
+}
+
+.phone{
+display:flex;
+gap:10px;
+}
+
+.country{
+padding:14px 16px;
+border-radius:12px;
+border:1px solid #CFEFFF;
+background:#fff;
+font-weight:600;
+}
+
+/* Button */
+
+.btn{
+
+width:100%;
+
+padding:15px;
+
+border:none;
+
+border-radius:12px;
+
+background:
+linear-gradient(
+135deg,
+#00B4D8,
+#0077B6
+);
+
+color:#fff;
+
+font-size:1rem;
+font-weight:700;
+
+cursor:pointer;
+
+transition:.3s;
+}
+
+.btn:hover{
+transform:translateY(-2px);
+}
+
+/* Success */
+
+.success{
+display:none;
+text-align:center;
+padding:30px;
+}
+
+.success.show{
+display:block;
+}
+
+.success i{
+font-size:70px;
+color:#16A34A;
+}
+
+.success h2{
+margin-top:15px;
+color:#023047;
+}
+
+.success p{
+margin-top:10px;
+color:#4A6C7A;
+}
+
+/* Responsive */
+
+@media(max-width:600px){
+
+.card{
+padding:25px 18px;
+}
+
+.phone{
+flex-direction:column;
+}
+
+.country{
+width:100%;
+text-align:center;
+}
+
+h1{
+text-align:center;
+}
+
+.sub{
+text-align:center;
+}
+
+.badge{
+display:flex;
+justify-content:center;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="glow1"></div>
+<div class="glow2"></div>
+<div class="glow3"></div>
+<div class="wave"></div>
+
+<div class="container">
+
+<div class="badge">
+<span></span>
+Water Supply Department
+</div>
+
+<h1>💧 Water Supply Support</h1>
+
+<p class="sub">
+Submit complaints, water supply issues, service requests or feedback.
+Our support team will respond within 24 hours.
+</p>
+
+<div class="card">
+
+<div id="formView">
+
+<form id="contactForm">
+
+<div class="field">
+<label class="label">Full Name</label>
+
+<div class="input-wrap">
+<i class="bi bi-person"></i>
+<input type="text" id="name" required>
+</div>
+</div>
+
+<div class="field">
+<label class="label">Mobile Number</label>
+
+<div class="phone">
+
+<div class="country">
+🇮🇳 +91
+</div>
+
+<div class="input-wrap" style="flex:1">
+<i class="bi bi-phone"></i>
+<input type="tel" id="mobile" maxlength="10" required>
+</div>
+
+</div>
+</div>
+
+<div class="field">
+<label class="label">Message</label>
+
+<div class="input-wrap textarea-wrap">
+<i class="bi bi-chat-dots"></i>
+
+<textarea
+id="message"
+required
+placeholder="Describe your issue..."
+></textarea>
+
+</div>
+</div>
+
+<button class="btn" type="submit">
+<i class="bi bi-send-fill"></i>
+Send Message
+</button>
+
+</form>
+
+</div>
+
+<div class="success" id="success">
+
+<i class="bi bi-check-circle-fill"></i>
+
+<h2>Message Sent Successfully</h2>
+
+<p>
+Thank you for contacting us.<br>
+We will respond shortly.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* Replace with your Apps Script URL */
+
+const SHEET_URL =
+"https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+
+document.getElementById("mobile")
+.addEventListener("input",function(){
+
+this.value=this.value
+.replace(/\D/g,"")
+.slice(0,10);
+
+});
+
+document.getElementById("contactForm")
+.addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const name=
+document.getElementById("name").value.trim();
+
+const mobile=
+document.getElementById("mobile").value.trim();
+
+const message=
+document.getElementById("message").value.trim();
+
+if(name.length<2){
+
+alert("Enter valid name");
+return;
+
+}
+
+if(!/^[6-9]\d{9}$/.test(mobile)){
+
+alert("Enter valid mobile number");
+return;
+
+}
+
+if(message.length<5){
+
+alert("Enter message");
+return;
+
+}
+
+const body=new URLSearchParams({
+
+timestamp:new Date().toLocaleString(),
+
+name:name,
+
+mobile:"+91"+mobile,
+
+message:message
+
+});
+
+try{
+
+await fetch(SHEET_URL,{
+method:"POST",
+body:body
+});
+
+}catch(err){
+
+console.log(err);
+
+}
+
+document.getElementById("formView").style.display="none";
+
+document.getElementById("success")
+.classList.add("show");
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.header { background: #1a2540; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+.header-icon { width: 36px; height: 36px; border-radius: 50%; background: #e8a020; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.header-title { font-size: 15px; font-weight: 500; }
+.header-sub { font-size: 11px; color: #90a0c0; letter-spacing: 1px; text-transform: uppercase; }
+.official-badge { margin-left: auto; background: #e8a020; color: #1a2540; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; }
+.stats-bar { background: #1a2540; display: flex; border-top: 1px solid #2a3a5a; }
+.stat { flex: 1; text-align: center; padding: 16px 8px; border-right: 1px solid #2a3a5a; }
+.stat:last-child { border-right: none; }
+.stat-num { font-size: 28px; font-weight: 700; color: #e8a020; }
+.stat-label { font-size: 10px; color: #90a0c0; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.main { background: #eef0f5; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+.map-panel { background: #fff; border-radius: 8px; overflow: hidden; }
+.panel-header { background: #1a2540; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.panel-title { color: #fff; font-size: 13px; font-weight: 500; }
+.panel-badge { margin-left: auto; background: #e8a020; color: #1a2540; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
+#map { height: 320px; }
+.legend { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px; background: #fff; border-top: 1px solid #e0e4ec; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; padding: 3px 8px; border-radius: 12px; border: 1px solid #e0e4ec; }
+.leg-item.active { border-color: #1a2540; background: #f0f4ff; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+.summary-panel { background: #fff; border-radius: 8px; overflow: hidden; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.summary-table th { background: #2a3550; color: #90a0c0; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px; text-align: left; font-weight: 500; }
+.summary-table td { padding: 7px 12px; border-bottom: 1px solid #f0f2f8; color: #2a3a5a; vertical-align: middle; }
+.summary-table tr:hover td { background: #f6f8ff; }
+.summary-table tr:last-child td { background: #1a2540; color: #e8a020; font-weight: 600; }
+.bar-wrap { display: flex; align-items: center; gap: 6px; }
+.bar { height: 6px; border-radius: 3px; }
+.num-badge { font-weight: 600; font-size: 11px; }
+.bottom { background: #eef0f5; padding: 0 16px 16px; }
+.hab-panel { background: #fff; border-radius: 8px; overflow: hidden; }
+.hab-controls { padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: #fff; border-bottom: 1px solid #eef0f5; }
+.hab-controls select { font-size: 12px; padding: 6px 10px; border: 1px solid #d0d8e8; border-radius: 6px; color: #2a3a5a; background: #fff; }
+.hab-controls button { background: #1a2540; color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; cursor: pointer; }
+.showing { font-size: 12px; color: #7080a0; margin-left: auto; }
+.hab-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px; max-height: 280px; overflow-y: auto; }
+.hab-card { border: 1px solid #e8ecf8; border-radius: 8px; padding: 10px; display: flex; align-items: flex-start; gap: 8px; }
+.hab-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.hab-name { font-size: 11px; font-weight: 600; color: #1a2540; line-height: 1.3; }
+.hab-village { font-size: 10px; color: #7080a0; margin-top: 2px; }
+</style>
+
+<div class="header">
+  <div class="header-icon">🏘</div>
+  <div>
+    <div class="header-title">Kudligi Taluk — Covered Habitations</div>
+    <div class="header-sub">Vijayanagara District · Karnataka</div>
+  </div>
+  <div class="official-badge">OFFICIAL DATA</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">1</div><div class="stat-label">Taluk</div></div>
+  <div class="stat"><div class="stat-num">2</div><div class="stat-label">Villages</div></div>
+  <div class="stat"><div class="stat-num">214</div><div class="stat-label">Covered Habitations</div></div>
+  <div class="stat"><div class="stat-num">143</div><div class="stat-label">Max (Pavagada)</div></div>
+  <div class="stat"><div class="stat-num">71</div><div class="stat-label">Min (Ujjini)</div></div>
+</div>
+
+<div class="main">
+  <div class="map-panel">
+    <div class="panel-header">
+      <span>📍</span>
+      <span class="panel-title">Village Locations — Kudligi Taluk</span>
+      <span class="panel-badge">INTERACTIVE MAP</span>
+    </div>
+    <div id="map"></div>
+    <div class="legend" id="legend">
+      <div class="leg-item active" data-village="all" onclick="filterVillage('all')">
+        <div class="leg-dot" style="background:#1a2540"></div> All (214)
+      </div>
+      <div class="leg-item" data-village="Pavagada" onclick="filterVillage('Pavagada')">
+        <div class="leg-dot" style="background:#e8a020"></div> Pavagada (143)
+      </div>
+      <div class="leg-item" data-village="Ujjini" onclick="filterVillage('Ujjini')">
+        <div class="leg-dot" style="background:#5c7ccc"></div> Ujjini (71)
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-panel">
+    <div class="panel-header">
+      <span>📋</span>
+      <span class="panel-title">Village Summary</span>
+      <span class="panel-badge">2 VILLAGES</span>
+    </div>
+    <table class="summary-table">
+      <tr><th>#</th><th>Village</th><th>Habitations</th><th>Scale</th></tr>
+      <tr>
+        <td>1</td>
+        <td><span style="color:#e8a020">●</span> Pavagada</td>
+        <td>143</td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width:120px;background:#e8a020"></div>
+            <span class="num-badge" style="color:#e8a020">143</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><span style="color:#5c7ccc">●</span> Ujjini</td>
+        <td>71</td>
+        <td>
+          <div class="bar-wrap">
+            <div class="bar" style="width:60px;background:#5c7ccc"></div>
+            <span class="num-badge" style="color:#5c7ccc">71</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Total</b></td>
+        <td colspan="2"><b>214</b></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="hab-panel">
+    <div class="panel-header">
+      <span>🏘</span>
+      <span class="panel-title">Habitation Details</span>
+      <span class="panel-badge">ALL VILLAGES</span>
+    </div>
+    <div class="hab-controls">
+      <select id="village-select" onchange="filterCards()">
+        <option value="all">All Villages</option>
+        <option value="Pavagada">Pavagada</option>
+        <option value="Ujjini">Ujjini</option>
+      </select>
+      <button onclick="showAll()">Show All</button>
+      <span class="showing" id="showing-label">Showing 214 habitations</span>
+    </div>
+    <div class="hab-grid" id="hab-grid"></div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const villages = [
+  { name: "Pavagada", color: "#e8a020", lat: 14.098, lng: 77.285, habitations: ["VADDARAHATTI","MALURU","GOLLARAHATTI","KANAMADAGU","PICHARAHATTI","KENCHAMALLANAHALLI","YEMBALI","ALOORU","NAGALAPURA","KORACHARAHATTI","CHIKKOBANAHALLI","ULLANAHALLI","BANAVIKALLU","KENCHOBANAHALLI","M.B.IYYANAHALLI","KORACHARAHATTI","KARADIHALLI","ARJUNACHENNENAHALLI","SANKALAPURA","HULIKUNTE","YERALINGANAHALLI","GANGAMMANAHALLI","CHIRIBI","GADDADABORAYYANAHATTI","CHIRTAGUNDU","KOMBIHALLI","GOLLARAHATTI","T.BASAPURA","AMALAPURA","CHOUDAPUR","IGALAMALLAPURA","KYASANAKERI","SIDDAYYANAHATTI","GOLLARAHATTI","DIBBADAHALLI","GANDABOMMANAHALLI","MAREMMANAHALLI","NUNKANAHALLI","TIMMENAHALLI","RAMSAGARA HATTI","EKKAGUNDI","NADUVALAHALLI","YERRAGUNDLAHATTI","HURIDIHALLI","HOSAHATTI","MADAKALAKATTE","MADLAKANAHALLI","GUNDUMUDUGU","SIDDAPURA","KADEKOLLA","OBALASHETTYHALLI","BHEEMASAMUDRA","NELABOMMANAHALLI","GOLLARAHATTI","VADDARAHATTI","HARAKABHAVI","SHANTANAHALLI","B.GOLLARAHATTI","BELLAKATTE","BISNAHALLI","CHIKKAKUMBALAGUNTE","DASOBANAHALLI","SAKALAPURADA HATTI","HIREKUMBALAGUNTE","SURAVVANAHALLI","GOLLARAHATTI","GOLLARAHATTI","HULEKERE","GOLLARAHATTI","BYLATUMBARAGUDDI","RANGANATHANAHALLI","HOSAHALLI","JUTTANALINGANAHATTI","EMADAPURA","SUTTAKARNARAHATTI","TAYAKANAHALLI","CHOUTAYYANAHATTI","HOSUR","HUDEM","NADUVALAHATTI","K.KARNARAHATTI","M.KARNARAHATTI","VALASE","HURALIHAL","MINAKERE","OBALAPURA","H.P.HATTI","MYASARAHATTI","JUMBOBANAHALLI","MYASARAHATTI","KUMATI","TAMMAYYANAGUDDA","LOKIKERE","CHAPPARADAHALLI","MARURU","HARAALU","KANNANAYAKANAHALLI","RAMANAYAKANAHALLI","K.AYYANAHALLI","BORAGATTA","KALAPURA","CHINNENAHALLI","MURTHINAYAKANAHALLI","HARAKANAHALU","HIREVADDENAHALLI","NADUMAVINAHALLI","CHIKKAJOGIHALLI","CHIKKAJOGIHALLI TANDA","KURIHATTI","MAKANADUGU","HUNASIKATTE","JOLADAKUDLIGI","MANGANAHALLI","KONANAHALLI","KURUBANAHALLI","NAGARAKATTE","BELADERI","NAGENAHALLI","GANAGATTA","MANGAPURA","YERRAMMANAHALLI","NIMBALAGERI","PUJARAHALLI TANDA","KANNABORAYYANAHATTI","KATRIKEHATTI","PUJARAHALLI","MALIHALLI","THIPPEHALLI","KALLAHALLI","SUNKADAKALLU","JAGATAGERI","RAMPURA","KODIHALLI","SIRINAYAKANAHALLI","PALAYYANAKOTE","SULADAHALLI","AGRAHARA","GUNASAGARA","HANUMANAHALLI","TULAHALLI","BENAKANAHALLI","UJJINI","BYRADEVARAGUDDA"] },
+  { name: "Ujjini", color: "#5c7ccc", lat: 14.310, lng: 76.960, habitations: ["APPENAHALLI TANDA","CHILUMIHALLI TANDA","DEVARAHATTI","MAHADEVAPURA","BORAYYANAHALLI","HALASAGARA","K.RAYAPURA","BOMBAY COLONY","APPENAHALLI","D.SIDDAPURA","KUPPINAKERI","TUPPAKANAHALLI","ECHALABOMMANAHALLI","KENGALAHATTI","SANNAGOLLARAHATTI","BADELADKU","DODDAGOLLARAHATTI","NARASIMHAGIRI","BELLAGATTA","KATRAHALLI","DUPADAHALLI TANDA","DUPADAHALLI","GOLLARAHATTI","BEVUR","SRIKANTAPURA TANDA","KASAPURA","LINGANAHALLI THANDA","SRIKANTAPURA","YERROBANAHATTI","SUEVODAYA","GUDEKOTE","SHIDEGALLU","SANIHALLI","HIREHEGDAL","BOPPALAPURA","SASALAWADA","MALLANAYAKANAHALLI","MOTIKAL TANDA","HYALYA","LOTTANAKERI","JERMALI","KAMAYYANAHATTI","A.DIBBADAHALLI","HAROODI","GEDDALAGATTI","SOORAVVANAHALLI","AMMANAKERI","VIRUPAPURA","KAKKUPPI","BATTANAHALLI","TIMMALAPURA","AKKAPURA","GAJAPURA","KANDAGALLU","TIMMALAPURA TANDA","MYASARAHATTI","BEERALAGUDDA","MARABHA","MARABHAGOLLARAHATTI","Marabanahalli","Marabanahalli Gollarahatti","CHANDRASHEKARAPURA","RAMADURGA","GOLLARAHATTI","NAGARAHUNISE","KURUREDAVU","KIVALYAPURA","SHIVAPURA","GOLLARAHATTI","JANGAMASOVENAHALLI","BANDEBASAPURA TANDA"] }
+];
+
+let map, markers = [], labelLayers = [], currentFilter = 'all';
+
+function initMap() {
+  map = L.map('map').setView([14.2, 77.13], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© Leaflet | © OpenStreetMap'
+  }).addTo(map);
+
+  villages.forEach(v => {
+    const markerIcon = L.divIcon({
+      className: '',
+      html: `<div style="width:16px;height:16px;border-radius:50%;background:${v.color};border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,0.45)"></div>`,
+      iconSize: [16, 16], iconAnchor: [8, 8]
+    });
+
+    const labelIcon = L.divIcon({
+      className: '',
+      html: `<div style="background:${v.color};color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.3);letter-spacing:0.3px">${v.name} (${v.habitations.length})</div>`,
+      iconSize: null, iconAnchor: [-12, 8]
+    });
+
+    const m = L.marker([v.lat, v.lng], { icon: markerIcon })
+      .addTo(map)
+      .bindPopup(`<b>${v.name}</b><br>${v.habitations.length} habitations`);
+    m._villageData = v;
+    markers.push(m);
+
+    const lbl = L.marker([v.lat, v.lng], { icon: labelIcon, interactive: false }).addTo(map);
+    lbl._villageData = v;
+    labelLayers.push(lbl);
+  });
+}
+
+function filterVillage(name) {
+  currentFilter = name;
+  document.querySelectorAll('.leg-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-village="${name}"]`).classList.add('active');
+  markers.forEach(m => {
+    if (name === 'all' || m._villageData.name === name) m.addTo(map);
+    else map.removeLayer(m);
+  });
+  labelLayers.forEach(l => {
+    if (name === 'all' || l._villageData.name === name) l.addTo(map);
+    else map.removeLayer(l);
+  });
+  filterCards();
+}
+
+function buildCards(list) {
+  const grid = document.getElementById('hab-grid');
+  grid.innerHTML = '';
+  list.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'hab-card';
+    d.innerHTML = `<div class="hab-num" style="background:${item.color}">${i+1}</div>
+      <div><div class="hab-name">${item.name}</div><div class="hab-village">${item.village}</div></div>`;
+    grid.appendChild(d);
+  });
+  document.getElementById('showing-label').textContent = `Showing ${list.length} habitations`;
+}
+
+function getAllHabs() {
+  let all = [];
+  villages.forEach(v => v.habitations.forEach(h => all.push({ name: h, village: v.name, color: v.color })));
+  return all;
+}
+
+function filterCards() {
+  const sel = document.getElementById('village-select').value;
+  const all = getAllHabs();
+  const filtered = sel === 'all' ? all : all.filter(h => h.village === sel);
+  buildCards(filtered);
+}
+
+function showAll() {
+  document.getElementById('village-select').value = 'all';
+  filterCards();
+  filterVillage('all');
+}
+
+window.addEventListener('load', () => {
+  initMap();
+  buildCards(getAllHabs());
+});
+</script>

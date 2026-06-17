@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Harapanahalli Taluk — Covered Habitations</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --navy: #142850;
+    --navy-light: #1c3866;
+    --gold: #E0A537;
+    --bg: #EEF1F6;
+    --card: #ffffff;
+    --border: #dde3ec;
+    --text: #1a2332;
+    --text-soft: #5b6478;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+  header {
+    background: var(--navy);
+    border-bottom: 2px solid var(--gold);
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 14px;
+    color: #fff;
+  }
+  .logo-badge {
+    width: 38px; height: 38px; border-radius: 8px;
+    background: var(--gold); color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 700; }
+  header .sub { font-size: 0.72rem; color: var(--gold); letter-spacing: 0.6px; margin-top: 2px; }
+
+  .stats-strip {
+    background: var(--navy-light);
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat {
+    flex: 1; text-align: center; padding: 14px 10px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat:last-child { border-right: none; }
+  .stat .num { font-family: Georgia, 'Times New Roman', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); }
+  .stat .lbl { font-size: 0.68rem; letter-spacing: 0.8px; color: #c2c9d9; margin-top: 2px; text-transform: uppercase; }
+
+  .content { padding: 22px; display: flex; flex-direction: column; gap: 20px; }
+  .row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+
+  .card {
+    background: var(--card); border-radius: 10px; border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(20,40,80,0.06);
+    overflow: hidden; flex: 1; min-width: 320px;
+  }
+  .card-header {
+    background: var(--navy); color: #fff;
+    padding: 11px 16px; display: flex; align-items: center; justify-content: space-between;
+    font-weight: 600; font-size: 0.92rem;
+  }
+  .card-header .badge {
+    background: var(--gold); color: var(--navy); font-size: 0.66rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.4px;
+  }
+
+  /* MAP CARD */
+  #map { width: 100%; height: 420px; }
+  .map-footer-label {
+    position: absolute; bottom: 34px; left: 10px;
+    background: rgba(20,40,80,0.85); color: #fff; font-size: 0.72rem;
+    padding: 4px 10px; border-radius: 5px; z-index: 500;
+  }
+  .legend-bar {
+    padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 7px;
+    border-top: 1px solid var(--border); background: #F7F9FC;
+  }
+  .legend-chip {
+    display: flex; align-items: center; gap: 6px;
+    border: 1.5px solid #d4dae4; border-radius: 16px;
+    padding: 4px 11px; font-size: 0.74rem; font-weight: 600; cursor: pointer;
+    background: #fff; transition: all .15s; color: var(--text-soft);
+  }
+  .legend-chip:hover { border-color: var(--navy); }
+  .legend-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .legend-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* SUMMARY TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead th {
+    text-align: left; font-size: 0.68rem; letter-spacing: 0.5px; color: var(--text-soft);
+    text-transform: uppercase; padding: 9px 14px; border-bottom: 1px solid var(--border);
+    background: #F7F9FC;
+  }
+  tbody td { padding: 8px 14px; border-bottom: 1px solid #F0F3F8; vertical-align: middle; }
+  tbody tr:hover { background: #F7F9FC; cursor: pointer; }
+  .vname { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .vdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .scale-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .scale-bar { height: 7px; border-radius: 4px; }
+  .scale-val { font-size: 0.78rem; font-weight: 700; color: var(--text-soft); }
+  tfoot td { background: var(--navy); color: #fff; font-weight: 700; padding: 10px 14px; }
+
+  /* HABITATION DETAILS */
+  .details-controls {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  select {
+    padding: 7px 12px; border: 1px solid #cdd5e0; border-radius: 6px;
+    font-size: 0.82rem; background: #fff; color: var(--text); cursor: pointer;
+  }
+  .btn-showall {
+    background: var(--navy-light); color: #fff; border: none;
+    padding: 7px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-showall:hover { background: var(--navy); }
+  .showing-label { font-size: 0.8rem; color: var(--text-soft); }
+  .showing-label b { color: var(--gold); background: var(--navy); padding: 1px 7px; border-radius: 10px; }
+  .search-input {
+    padding: 7px 12px; border: 1px solid #cdd5e0; border-radius: 6px;
+    font-size: 0.82rem; flex: 1; min-width: 160px; max-width: 260px;
+  }
+
+  .hab-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
+    background: var(--border);
+  }
+  .hab-cell {
+    background: #fff; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;
+    min-height: 64px;
+  }
+  .hab-num {
+    width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 0.72rem;
+    font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hab-name { font-size: 0.84rem; font-weight: 600; line-height: 1.25; }
+  .hab-village { font-size: 0.71rem; color: var(--text-soft); margin-top: 1px; }
+
+  @media (max-width: 1000px) {
+    .hab-grid { grid-template-columns: repeat(3, 1fr); }
+    .stat .num { font-size: 1.3rem; }
+  }
+  @media (max-width: 640px) {
+    .hab-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-strip { flex-wrap: wrap; }
+    .stat { flex: 1 1 50%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">హ</div>
+  <div>
+    <h1>Harapanahalli Taluk — Covered Habitations</h1>
+    <div class="sub">DAVANAGERE DISTRICT · KARNATAKA</div>
+  </div>
+</header>
+
+<div class="stats-strip">
+  <div class="stat"><div class="num">1</div><div class="lbl">Taluk</div></div>
+  <div class="stat"><div class="num">5</div><div class="lbl">Villages</div></div>
+  <div class="stat"><div class="num">223</div><div class="lbl">Covered Habitations</div></div>
+  <div class="stat"><div class="num">101</div><div class="lbl">Max (Chigateri)</div></div>
+  <div class="stat"><div class="num">7</div><div class="lbl">Min (Nittur)</div></div>
+</div>
+
+<div class="content">
+  <div class="row">
+    <!-- MAP CARD -->
+    <div class="card" style="flex: 1.3; position: relative;">
+      <div class="card-header">
+        <span>📍 Village Locations — Harapanahalli Taluk</span>
+        <span class="badge">INTERACTIVE MAP</span>
+      </div>
+      <div style="position:relative;">
+        <div id="map"></div>
+        <div class="map-footer-label">Harapanahalli Taluk · Davanagere District · Click a marker for details</div>
+      </div>
+      <div class="legend-bar" id="legend-bar"></div>
+    </div>
+
+    <!-- SUMMARY CARD -->
+    <div class="card" style="flex: 1;">
+      <div class="card-header">
+        <span>📊 Village Summary</span>
+        <span class="badge">5 VILLAGES</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Village</th><th>Habitations</th><th>Scale</th></tr>
+        </thead>
+        <tbody id="summary-body"></tbody>
+        <tfoot>
+          <tr><td colspan="2">Total</td><td colspan="2">223</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- HABITATION DETAILS -->
+  <div class="card">
+    <div class="card-header">
+      <span>🏘️ Habitation Details</span>
+      <span class="badge">ALL VILLAGES</span>
+    </div>
+    <div class="details-controls">
+      <select id="village-select" onchange="onSelectChange()">
+        <option value="all">All Villages</option>
+      </select>
+      <button class="btn-showall" onclick="showAll()">Show All</button>
+      <input class="search-input" id="search-input" type="text" placeholder="Search habitation name..." oninput="renderHabGrid()"/>
+      <span class="showing-label">Showing <b id="showing-count">223</b> habitations</span>
+    </div>
+    <div class="hab-grid" id="hab-grid"></div>
+  </div>
+</div>
+
+<script>
+const villages = {
+  kanavi:     { label: 'Kanavi',     color: '#C0392B', center: [14.730, 76.020], count: 21 },
+  harakanalu: { label: 'Harakanalu', color: '#1A8A5F', center: [14.690, 76.080], count: 34 },
+  teligi:     { label: 'Teligi',     color: '#2563A8', center: [14.640, 75.980], count: 60 },
+  nittur:     { label: 'Nittur',     color: '#B8860B', center: [14.770, 76.110], count: 7  },
+  chigateri:  { label: 'Chigateri',  color: '#7F3FA1', center: [14.610, 76.140], count: 101 },
+};
+
+const names = {
+kanavi: ['ALAGILAWADA','ARASANALU','ARE MAJJIGERI','BHEEMALANA THANDA','CHIKKA MAJJIGERI','GARBHAGUDI',
+  'GIRIYAPURA TANDA','HALUVAGALU','HAMAPURA','I. BEVINAHALLI','ITTIGUDI','K. KALLAHALLI','KANAVI',
+  'KANDIKERI THANDA','KANVI','KANVI THANDA','KUNCHUR','KUNCHUR THANDA','MATTUR','SHIVAPURA','YARABALU'],
+harakanalu: ['BAGALI','AGRAHARA (KANNANAYAKANAHALLI)','SHRINGARATHOTA','KODIHALLI','KAYAKADAHALLI',
+  'MEGALA TANDA','HULIKATTI','VADDINADADAPURA THANDA','VADDINADADAPURA','MADALAGERE THANDA','MADALAGERE',
+  'KELAGINA THANDA','ESHAPURA','CHANNAHALLI','KAREKANAHALLI THANDA','KANAHALLI','YERADETHINAHALLI',
+  'MADAPURA','TOGARIKATTI','BANDRI','HARAKANALU','NARAYANAPURA','MEENAHALLI THANDA','UDAGATTI SANNA TANDA',
+  'UDAGATTI','BAPUJI NAGARA','CHIKKAHALLI','KOOLAHALLI','BANDRI THANDA','Y. KORACHARAHATTI','YALLAPURA',
+  'DODAGARANAHALLI','GOWRIHALLI','B. KORACHARAHALLI'],
+teligi: ['HOSAHALLI','GOLLERAHATTI','CHOWDAPURA','ALGANCHIKERI','TELIGI','SRIKANTAPURA','JAMBULINGANAHALLI',
+  'HIREMEGALAGERE','RAGIMASALAVADA','NAGALAPURA THANDA','YADIHALLI','BIKKIKATTI','SEVANAGARA','BENDIGERI',
+  'V. KORACHARAHATTI','VADERAHALLI','HALLIKERI KODI THANDA','HALLIKERE','ANDHRA CAMP','KAMBHATRAHALLI',
+  'GUNDAGATTHI','JITTINAKATTI','SHANKARANAHALLI','KODITHANDA','ARASAPURA','AREBASAPURA',
+  'BENDIGERI SANNA THANDA','HONNENAHALLI','RANGAPURA','BALENAHALLI','T. THIMLAPURA','TUMBIGERI',
+  'ANEMEGALA THANDA','NAGALAPURA','NEELAGUNDA','TALEDAHALLI THANDA','MACHIHALLI THANDA','MACHIHALLI',
+  'BYRAPURA','ANANTHANAHALLI','LAXMIPURA','KANCHIKERE','VADDINAHALLI','SHIRAGANAHALLI','INGALAGUNDI',
+  'POTHALAKATTI','NAGATHIKATTI THANDA','KALANAYAKANA THANDA','CHIKKAMEGALAGERE','SINGRIHALLI S. THANDA',
+  'SINGRIHALLI D. THANDA','SINGRIHALLI','GURUSHANTANAHALLI','TALAWAGILU','CHIRASTHAHALLI','DUGGAVATHI',
+  'G. DADAPURA','UDAYAPUR','ALAMARSIKERI','TALEDAHALLI'],
+nittur: ['TAVARAGUNDI','NANDYALA','KADATHI','VATTLAHALLI','NITTURU BASAPURA','NITTURU','NITTURU (2)'],
+chigateri: ['BEVINAHALLI','YARABALLI THANDA','THOUDURU','NELAGONDANAHALLI','GULEDAHATTI','NAGARAKONDA',
+  'PUNABHAGATTA','NANDIKAMBATHANDA','NANDIKAMBA','KADEKAL THANDA','HONNAPURA','CHANNAPURA THANDA',
+  'MADAKINICHAPURA THANDA','MADAKINICHAPURA','GIDDANAGENAHALLI','BIKKIMATTI THANDA','HARIYAMMANAHALLI',
+  'BHAVIHALLI','BASAVANAHAL','H. SEERANAHALLI','ALADAHALLI','JOSHILINGAPURA','PAVANAPURA','KONANEKATTI',
+  'RAMAGHATTA DODDA THANDA','NAREBOMMANAHALLI','DIDGI THANDA','RAMANAGARA','PHANIYAPURA','GOWLERAHATTI',
+  'PRUTHESHWARA','PRAKASH NAGARA','LOWLESHWARA','HOSA OBALAPURA','BADA','SRINIVASAPURA','HANUMANAHALLI',
+  'KENCHAPURA','NANDIBEVOOR','MYDURU','MATTHIHALLI','CHIGATERI','MUTTIGI','BENNIHALLI','THIMALAPURA',
+  'ARASIKERE','UCCHANGIDURGA','BEVINAHALLI THANDA','BEVINAHALLI S. THANDA','YARABALLI','THOUDUR TANDA',
+  'KAWALAHALLI','KYARAKATTI','SASVIHALLI','HUNSIHALLI','KUNIMADIHALLI','HAGARIGUDIHALLI',
+  'PUNABHAGATTA THANDA','KAMBATHHALLI','DAGGIBASAPURA','CHANNAPURA','VADERABASAPURA TANDA','VADERABASAPURA',
+  'NICCHAVVANAHALLI','KANAKABASAPURA','ADAVIMALLAPURA','KOMARANAHALLI','DYAPANAYAKANAHALLI',
+  'NANDIBEVOOR THANDA','KONGANAHOSUR','KANIVIHALLI','KESARAHALLI','GOWRIPURA','GAJAPURA','BALIGANUR',
+  'N. SEERANAHALLI','KASAVANAHALLI','KADABAGERE','HIKKIMAGERE','KEREGUDIHALLI','HOSAKOTE','CHIKKABBALLI',
+  'BUDIHAL','RAMAGHATTA','U. KALLAHALLI','KUNEMAGANAHALLI','CHATNIHALLI','NAZEER NAGARA','NILUVANJI',
+  'HALE OBALAPURA','KADAKOLA','MADIHALLI','GADIGUDIHAL','HUNASIKATTI','ANAJIGERE','J. THUMBIGERE',
+  'NICCHAPURA','HOMBALAGATTA','THIPPANAYAKANAHALLI','D. THIMLAPURA','ADAVIHALLI'],
+};
+
+// Build flat habitation list with deterministic spiral coordinates around village centers
+const habitations = [];
+Object.keys(villages).forEach(vkey => {
+  const list = names[vkey];
+  const n = list.length;
+  const [baseLat, baseLng] = villages[vkey].center;
+  const spread = 0.045 + 0.0009 * n;
+  list.forEach((nm, i) => {
+    const angle = i * 2.39996;
+    const radius = spread * Math.sqrt((i + 1) / n);
+    const lat = baseLat + radius * Math.cos(angle);
+    const lng = baseLng + radius * Math.sin(angle) * 1.15;
+    habitations.push({ v: vkey, n: i + 1, name: nm, lat, lng });
+  });
+});
+
+let map, markers = [], activeFilter = 'all';
+
+function makeIcon(color, label, showLabel) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative; display:flex; align-items:center;">
+             <div style="width:20px;height:20px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,0.45);"></div>
+             <span style="display:${showLabel ? 'inline-block' : 'none'}; margin-left:5px; font-size:11px; font-weight:700; color:#1a2332; background:rgba(255,255,255,0.92); padding:1px 6px; border-radius:4px; border:1px solid ${color}; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.15);">${label}</span>
+           </div>`,
+    iconSize: [220, 20], iconAnchor: [10, 10]
+  });
+}
+
+const LABEL_ZOOM_THRESHOLD = 12;
+
+function initMap() {
+  map = L.map('map').setView([14.69, 76.05], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 17
+  }).addTo(map);
+
+  habitations.forEach(h => {
+    const col = villages[h.v].color;
+    const showLabel = map.getZoom() >= LABEL_ZOOM_THRESHOLD;
+    const m = L.marker([h.lat, h.lng], {icon: makeIcon(col, h.name, showLabel)})
+      .addTo(map)
+      .bindPopup(`<b>${h.name}</b><br><span style="color:${col}">${villages[h.v].label}</span> — Habitation #${h.n}`);
+    m._v = h.v;
+    m._h = h;
+    markers.push(m);
+  });
+
+  map.on('zoomend', updateLabelVisibility);
+}
+
+function updateLabelVisibility() {
+  const show = map.getZoom() >= LABEL_ZOOM_THRESHOLD;
+  markers.forEach(m => {
+    const col = villages[m._h.v].color;
+    m.setIcon(makeIcon(col, m._h.name, show));
+  });
+}
+
+function buildLegend() {
+  const bar = document.getElementById('legend-bar');
+  let html = `<div class="legend-chip active" data-v="all" onclick="filterMap('all')">
+    <span class="dot" style="background:#142850"></span> All (223)</div>`;
+  Object.entries(villages).forEach(([k, v]) => {
+    html += `<div class="legend-chip" data-v="${k}" onclick="filterMap('${k}')">
+      <span class="dot" style="background:${v.color}"></span> ${v.label} (${v.count})</div>`;
+  });
+  bar.innerHTML = html;
+}
+
+function filterMap(key) {
+  activeFilter = key;
+  document.querySelectorAll('.legend-chip').forEach(c => c.classList.toggle('active', c.dataset.v === key));
+  markers.forEach(m => {
+    if (key === 'all' || m._v === key) m.addTo(map); else m.remove();
+  });
+  if (key === 'all') {
+    map.setView([14.69, 76.05], 10);
+  } else {
+    const pts = habitations.filter(h => h.v === key).map(h => [h.lat, h.lng]);
+    map.fitBounds(pts, { padding: [40,40] });
+  }
+  document.getElementById('village-select').value = key;
+  renderHabGrid();
+}
+
+function buildSummaryTable() {
+  const body = document.getElementById('summary-body');
+  const maxCount = Math.max(...Object.values(villages).map(v => v.count));
+  let html = '';
+  Object.entries(villages).forEach(([k, v], i) => {
+    const pct = Math.round((v.count / maxCount) * 100);
+    html += `<tr onclick="filterMap('${k}')">
+      <td>${i+1}</td>
+      <td><div class="vname"><span class="vdot" style="background:${v.color}"></span>${v.label}</div></td>
+      <td>${v.count}</td>
+      <td><div class="scale-bar-wrap"><div class="scale-bar" style="width:${pct}%; background:${v.color};"></div><span class="scale-val">${v.count}</span></div></td>
+    </tr>`;
+  });
+  body.innerHTML = html;
+}
+
+function buildVillageSelect() {
+  const sel = document.getElementById('village-select');
+  Object.entries(villages).forEach(([k, v]) => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = v.label;
+    sel.appendChild(opt);
+  });
+}
+
+function onSelectChange() {
+  const val = document.getElementById('village-select').value;
+  filterMap(val);
+}
+
+function showAll() {
+  document.getElementById('search-input').value = '';
+  filterMap('all');
+}
+
+function renderHabGrid() {
+  const grid = document.getElementById('hab-grid');
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const filtered = habitations.filter(h =>
+    (activeFilter === 'all' || h.v === activeFilter) &&
+    (!search || h.name.toLowerCase().includes(search))
+  );
+  document.getElementById('showing-count').textContent = filtered.length;
+  grid.innerHTML = filtered.map(h => `
+    <div class="hab-cell">
+      <div class="hab-num" style="background:${villages[h.v].color}">${h.n}</div>
+      <div>
+        <div class="hab-name">${h.name}</div>
+        <div class="hab-village">${villages[h.v].label}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.addEventListener('load', () => {
+  initMap();
+  buildLegend();
+  buildSummaryTable();
+  buildVillageSelect();
+  renderHabGrid();
+});
+</script>
+</body>
+</html>

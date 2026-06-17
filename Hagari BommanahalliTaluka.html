@@ -1,0 +1,269 @@
+<h1>The Total Number of Habitations Covered under the Multi Village Scheme (MVS) in Hagari BommanahalliTaluk</h1> 
+<hr>
+
+<h2 class="sr-only">Interactive map of H B Halli Taluk habitations across Sonna, Dashmpaura, and Upanayakanahalli villages</h2>
+
+<div style="font-size:14px; color:var(--color-text-secondary); margin-bottom:8px; padding: 0.5rem 0 0;">
+  Click a marker to see habitation details. Use legend to filter by village.
+</div>
+
+<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+  <button onclick="filterMap('all')" id="btn-all" style="font-size:12px; padding:4px 12px; border-radius:20px; border:1.5px solid #185FA5; background:#185FA5; color:#fff; cursor:pointer;">All (99)</button>
+  <button onclick="filterMap('sonna')" id="btn-sonna" style="font-size:12px; padding:4px 12px; border-radius:20px; border:1.5px solid #D85A30; background:#fff; color:#D85A30; cursor:pointer;">🔴 Sonna (50)</button>
+  <button onclick="filterMap('dashmpaura')" id="btn-dashmpaura" style="font-size:12px; padding:4px 12px; border-radius:20px; border:1.5px solid #1D9E75; background:#fff; color:#1D9E75; cursor:pointer;">🟢 Dashmpaura (29)</button>
+  <button onclick="filterMap('upanayakanahalli')" id="btn-upanayakanahalli" style="font-size:12px; padding:4px 12px; border-radius:20px; border:1.5px solid #7F77DD; background:#fff; color:#7F77DD; cursor:pointer;">🟣 Upanayakanahalli (20)</button>
+  <span style="width:1px; height:20px; background:var(--color-border-tertiary); margin:0 4px;"></span>
+  <button onclick="downloadExcel()" id="btn-download" style="font-size:12px; padding:4px 12px; border-radius:20px; border:1.5px solid #185FA5; background:#fff; color:#185FA5; cursor:pointer; display:flex; align-items:center; gap:4px;">⬇️ Download all (Excel)</button>
+</div>
+
+<div id="map" style="width:100%; height:520px; border-radius:12px; border:0.5px solid var(--color-border-tertiary); overflow:hidden;"></div>
+
+<div id="info-panel" style="display:none; margin-top:10px; padding:10px 14px; background:var(--color-background-secondary); border-radius:8px; border:0.5px solid var(--color-border-tertiary);">
+  <div style="font-weight:500; font-size:14px;" id="info-name"></div>
+  <div style="font-size:12px; color:var(--color-text-secondary);" id="info-village"></div>
+  <div style="font-size:12px; color:var(--color-text-tertiary);" id="info-num"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  /* habitation name labels — hidden until zoomed in, then shown like Google Maps place labels */
+  #map .habitation-label {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-shadow:
+      -1px -1px 0 #fff, 1px -1px 0 #fff,
+      -1px  1px 0 #fff, 1px  1px 0 #fff,
+       0px  1.5px 0 #fff, 0px -1.5px 0 #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  #map .habitation-label::before { display: none; }
+  #map.show-labels .habitation-label { opacity: 1; }
+</style>
+
+<script>
+const habitations = [
+  {village:'sonna', num:1, name:'G Kodihalli', lat:15.0150, lng:76.0900},
+  {village:'sonna', num:2, name:'Gaddikeri', lat:15.0080, lng:76.0950},
+  {village:'sonna', num:3, name:'Tambrahalli', lat:15.0210, lng:76.0870},
+  {village:'sonna', num:4, name:'Bandicamp', lat:15.0260, lng:76.0820},
+  {village:'sonna', num:5, name:'Kyatayyanamaradi', lat:15.0300, lng:76.0780},
+  {village:'sonna', num:6, name:'K. Obalapura', lat:15.0350, lng:76.0730},
+  {village:'sonna', num:7, name:'Chilagodu', lat:15.0400, lng:76.0690},
+  {village:'sonna', num:8, name:'Basarakodu', lat:15.0450, lng:76.0650},
+  {village:'sonna', num:9, name:'Bannigola', lat:15.0500, lng:76.0610},
+  {village:'sonna', num:10, name:'Basarakodu Thanda', lat:15.0460, lng:76.0700},
+  {village:'sonna', num:11, name:'Krishnapura', lat:15.0550, lng:76.0580},
+  {village:'sonna', num:12, name:'Shegenahalli Colony-1', lat:15.0600, lng:76.0550},
+  {village:'sonna', num:13, name:'Shegenahalli Colony-2', lat:15.0620, lng:76.0530},
+  {village:'sonna', num:14, name:'Shegenahalli Colony-3', lat:15.0640, lng:76.0510},
+  {village:'sonna', num:15, name:'Heresobati', lat:15.0580, lng:76.0480},
+  {village:'sonna', num:16, name:'Chikkasobati', lat:15.0560, lng:76.0460},
+  {village:'sonna', num:17, name:'Eadrammanahalli', lat:15.0700, lng:76.0430},
+  {village:'sonna', num:18, name:'Bysigideri', lat:15.0720, lng:76.0400},
+  {village:'sonna', num:19, name:'Hale Mutuganahalli', lat:15.0760, lng:76.0370},
+  {village:'sonna', num:20, name:'Nandipura', lat:15.0800, lng:76.0340},
+  {village:'sonna', num:21, name:'Shivanandanagara', lat:15.0840, lng:76.0310},
+  {village:'sonna', num:22, name:'Hagarikydigihalli', lat:15.0880, lng:76.0280},
+  {village:'sonna', num:23, name:'Hosa Mutuganahalli', lat:15.0780, lng:76.0350},
+  {village:'sonna', num:24, name:'Rameshwarabandi', lat:15.0820, lng:76.0320},
+  {village:'sonna', num:25, name:'Muthkuru', lat:15.0860, lng:76.0290},
+  {village:'sonna', num:26, name:'Telegoli', lat:15.0900, lng:76.0260},
+  {village:'sonna', num:27, name:'Kithnuru', lat:15.0940, lng:76.0230},
+  {village:'sonna', num:28, name:'Hampasagara Colony-2', lat:15.1217, lng:76.0346},
+  {village:'sonna', num:29, name:'Nagalapura Thanda', lat:15.1250, lng:76.0380},
+  {village:'sonna', num:30, name:'Hampasagara Colony-1', lat:15.1190, lng:76.0310},
+  {village:'sonna', num:31, name:'Hampasagara Colony-3', lat:15.1230, lng:76.0360},
+  {village:'sonna', num:32, name:'Nagalapura', lat:15.1270, lng:76.0400},
+  {village:'sonna', num:33, name:'Enigi', lat:15.0100, lng:76.1050},
+  {village:'sonna', num:34, name:'Enigi Basapura', lat:15.0120, lng:76.1070},
+  {village:'sonna', num:35, name:'Hale Nelkuduri', lat:14.9950, lng:76.1200},
+  {village:'sonna', num:36, name:'Nelkuduri-1', lat:14.9970, lng:76.1220},
+  {village:'sonna', num:37, name:'Hanchinalu', lat:14.9990, lng:76.1180},
+  {village:'sonna', num:38, name:'Kannihalli', lat:14.9512, lng:76.1117},
+  {village:'sonna', num:39, name:'Chimmanahalli', lat:14.9900, lng:76.1150},
+  {village:'sonna', num:40, name:'Malavi', lat:14.9860, lng:76.1130},
+  {village:'sonna', num:41, name:'Haregondanahalli', lat:14.9820, lng:76.1100},
+  {village:'sonna', num:42, name:'Moregeri', lat:14.9780, lng:76.1080},
+  {village:'sonna', num:43, name:'Bannikallu', lat:14.9740, lng:76.1060},
+  {village:'sonna', num:44, name:'Kondenahalli', lat:14.9700, lng:76.1040},
+  {village:'sonna', num:45, name:'Yalubagondanahalli', lat:14.9660, lng:76.1020},
+  {village:'sonna', num:46, name:'Girigondanahalli', lat:14.9620, lng:76.1000},
+  {village:'sonna', num:47, name:'Hanumagondanahalli', lat:14.9580, lng:76.0980},
+  {village:'sonna', num:48, name:'Sonna', lat:15.0182, lng:76.1102},
+  {village:'sonna', num:49, name:'Sakrihalli', lat:15.0140, lng:76.1000},
+  {village:'sonna', num:50, name:'Uluvatti', lat:15.0060, lng:76.0930},
+  {village:'dashmpaura', num:1, name:'Kattehola Thanda', lat:14.9900, lng:75.8700},
+  {village:'dashmpaura', num:2, name:'Magimavinahalli', lat:14.9940, lng:75.8740},
+  {village:'dashmpaura', num:3, name:'Halagapura', lat:14.9980, lng:75.8780},
+  {village:'dashmpaura', num:4, name:'H.Obalapura', lat:15.0020, lng:75.8820},
+  {village:'dashmpaura', num:5, name:'Rayarala Thanda', lat:15.0060, lng:75.8860},
+  {village:'dashmpaura', num:6, name:'Guledalu', lat:15.0100, lng:75.8900},
+  {village:'dashmpaura', num:7, name:'Anekallu Thanda', lat:15.0140, lng:75.8940},
+  {village:'dashmpaura', num:8, name:'Maduru', lat:15.0180, lng:75.8980},
+  {village:'dashmpaura', num:9, name:'Upparagatta', lat:15.0220, lng:75.9020},
+  {village:'dashmpaura', num:10, name:'Anekallu', lat:15.0260, lng:75.9060},
+  {village:'dashmpaura', num:11, name:'Dashamapura', lat:14.9800, lng:75.8860},
+  {village:'dashmpaura', num:12, name:'Metri', lat:14.9760, lng:75.8900},
+  {village:'dashmpaura', num:13, name:'Nanyapura', lat:14.9720, lng:75.8940},
+  {village:'dashmpaura', num:14, name:'Hosakeri', lat:14.9680, lng:75.8980},
+  {village:'dashmpaura', num:15, name:'Hanasi', lat:14.9640, lng:75.9020},
+  {village:'dashmpaura', num:16, name:'Kanavinayakanahalli', lat:14.9600, lng:75.9060},
+  {village:'dashmpaura', num:17, name:'Kallahalli Thanda', lat:14.9560, lng:75.9100},
+  {village:'dashmpaura', num:18, name:'Kallahalli', lat:14.9520, lng:75.9140},
+  {village:'dashmpaura', num:19, name:'Benakallu', lat:14.9480, lng:75.9180},
+  {village:'dashmpaura', num:20, name:'Vatammanahalli', lat:14.9440, lng:75.9220},
+  {village:'dashmpaura', num:21, name:'Varalahalli', lat:14.9400, lng:75.9260},
+  {village:'dashmpaura', num:22, name:'Vallabhapura', lat:14.9360, lng:75.9300},
+  {village:'dashmpaura', num:23, name:'Bandihalli', lat:14.9320, lng:75.9340},
+  {village:'dashmpaura', num:24, name:'B.Mutkuru', lat:14.9280, lng:75.9380},
+  {village:'dashmpaura', num:25, name:'Pillobanahalli', lat:14.9240, lng:75.9420},
+  {village:'dashmpaura', num:26, name:'Keshavarayanabandi', lat:14.9200, lng:75.9460},
+  {village:'dashmpaura', num:27, name:'Vyasapura Thanda', lat:14.9160, lng:75.9500},
+  {village:'dashmpaura', num:28, name:'Chintrapalli', lat:14.9120, lng:75.9540},
+  {village:'dashmpaura', num:29, name:'Byalahunasi', lat:14.9080, lng:75.9580},
+  {village:'upanayakanahalli', num:1, name:'N.D.Kere', lat:14.9950, lng:75.8780},
+  {village:'upanayakanahalli', num:2, name:'Upanayakanahalli', lat:14.9802, lng:75.8855},
+  {village:'upanayakanahalli', num:3, name:'Marabbihal', lat:14.9720, lng:75.8950},
+  {village:'upanayakanahalli', num:4, name:'Marabbihal Thanda', lat:14.9700, lng:75.8930},
+  {village:'upanayakanahalli', num:5, name:'Nakrala Thanda', lat:14.9680, lng:75.8910},
+  {village:'upanayakanahalli', num:6, name:'Kenchtanahalli', lat:14.9660, lng:75.8890},
+  {village:'upanayakanahalli', num:7, name:'Kenchatanahalli Thanda', lat:14.9640, lng:75.8870},
+  {village:'upanayakanahalli', num:8, name:'Lokappanahola', lat:14.9620, lng:75.8850},
+  {village:'upanayakanahalli', num:9, name:'Varadapura', lat:14.9600, lng:75.8830},
+  {village:'upanayakanahalli', num:10, name:'Pinjarahegdal', lat:14.9580, lng:75.8810},
+  {village:'upanayakanahalli', num:11, name:'Hampapattana', lat:14.9560, lng:75.8790},
+  {village:'upanayakanahalli', num:12, name:'Anandadevanahalli', lat:14.9540, lng:75.8770},
+  {village:'upanayakanahalli', num:13, name:'Bylalu', lat:14.9520, lng:75.8750},
+  {village:'upanayakanahalli', num:14, name:'Kadalabalu', lat:14.9500, lng:75.8730},
+  {village:'upanayakanahalli', num:15, name:'Adavi Anandadevanahalli', lat:14.9530, lng:75.8760},
+  {village:'upanayakanahalli', num:16, name:'Bachigondanahalli Colony-1', lat:14.9480, lng:75.8710},
+  {village:'upanayakanahalli', num:17, name:'Bachigondanahalli Colony-2', lat:14.9460, lng:75.8695},
+  {village:'upanayakanahalli', num:18, name:'Ankasamudra New', lat:14.9440, lng:75.8680},
+  {village:'upanayakanahalli', num:19, name:'Kecchinabandi', lat:14.9420, lng:75.8660},
+  {village:'upanayakanahalli', num:20, name:'Nandibanda', lat:14.9400, lng:75.8640}
+];
+
+const colors = {
+  sonna: '#D85A30',
+  dashmpaura: '#1D9E75',
+  upanayakanahalli: '#7F77DD'
+};
+
+const labels = {
+  sonna: 'Sonna',
+  dashmpaura: 'Dashmpaura',
+  upanayakanahalli: 'Upanayakanahalli'
+};
+
+let map, markers = [], currentFilter = 'all';
+
+function makeIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
+    iconSize: [10,10],
+    iconAnchor: [5,5]
+  });
+}
+
+window.addEventListener('load', function() {
+  map = L.map('map').setView([14.98, 75.98], 9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+
+  habitations.forEach(h => {
+    const m = L.marker([h.lat, h.lng], {icon: makeIcon(colors[h.village])})
+      .addTo(map)
+      .on('click', () => showInfo(h));
+    m._villageKey = h.village;
+    m.bindTooltip(`<span style="color:${colors[h.village]}">${h.name}</span>`, {
+      permanent: true,
+      direction: 'right',
+      offset: [7, 0],
+      className: 'habitation-label',
+      interactive: false
+    });
+    markers.push(m);
+  });
+
+  L.control.scale().addTo(map);
+  map.on('zoomend', updateLabelVisibility);
+  updateLabelVisibility();
+});
+
+const LABEL_ZOOM_THRESHOLD = 11;
+
+function updateLabelVisibility() {
+  document.getElementById('map').classList.toggle('show-labels', map.getZoom() >= LABEL_ZOOM_THRESHOLD);
+}
+
+function downloadExcel() {
+  const rows = habitations.map((h, i) => ({
+    'Sl. No': i + 1,
+    'Village': labels[h.village],
+    'Habitation No.': h.num,
+    'Habitation Name': h.name,
+    'Latitude': h.lat,
+    'Longitude': h.lng
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:7},{wch:18},{wch:14},{wch:30},{wch:11},{wch:11}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'All Habitations');
+  XLSX.writeFile(wb, 'HB_Halli_Habitations.xlsx');
+}
+
+function showInfo(h) {
+  document.getElementById('info-panel').style.display = 'block';
+  document.getElementById('info-name').textContent = h.name;
+  document.getElementById('info-village').innerHTML = `<span style="color:${colors[h.village]}">● ${labels[h.village]}</span>`;
+  document.getElementById('info-num').textContent = `Habitation #${h.num}`;
+}
+
+function filterMap(key) {
+  currentFilter = key;
+  markers.forEach(m => {
+    if (key === 'all' || m._villageKey === key) {
+      m.addTo(map);
+    } else {
+      m.remove();
+    }
+  });
+
+  ['all','sonna','dashmpaura','upanayakanahalli'].forEach(k => {
+    const btn = document.getElementById('btn-'+k);
+    if (k === key) {
+      btn.style.background = k === 'all' ? '#185FA5' : colors[k];
+      btn.style.color = '#fff';
+      btn.style.borderColor = k === 'all' ? '#185FA5' : colors[k];
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = k === 'all' ? '#185FA5' : colors[k];
+      btn.style.borderColor = k === 'all' ? '#185FA5' : colors[k];
+    }
+  });
+
+  if (key !== 'all') {
+    const pts = habitations.filter(h => h.village === key).map(h => [h.lat, h.lng]);
+    map.fitBounds(pts, {padding: [30,30]});
+    map.once('moveend', () => {
+      if (map.getZoom() < LABEL_ZOOM_THRESHOLD) map.setZoom(LABEL_ZOOM_THRESHOLD);
+    });
+  } else {
+    map.setView([14.98, 75.98], 9);
+  }
+}
+</script>

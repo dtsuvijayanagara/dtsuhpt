@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospete Taluk — Covered Habitations</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --indigo:        #1A2744;
+    --indigo-light:  #243560;
+    --saffron:       #E8943A;
+    --saffron-light: #F5B572;
+    --teal:          #3A7CA5;
+    --white:         #FFFFFF;
+    --slate-bg:      #F0F4FA;
+    --slate-mid:     #DDE5F0;
+    --text:          #1A2744;
+    --text-muted:    #5A6A8A;
+    --border:        #CBD5E8;
+  }
+
+  body { font-family: 'Noto Sans', sans-serif; background: var(--slate-bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--indigo); padding: 0 2rem;
+    display: flex; align-items: center; gap: 1.2rem;
+    height: 70px; border-bottom: 3px solid var(--saffron);
+  }
+  .gov-logo {
+    width: 46px; height: 46px; background: var(--saffron); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 900; color: var(--indigo); flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+  }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--white); font-weight: 700; line-height: 1.2; }
+  header h1 span { display: block; font-family: 'Noto Sans', sans-serif; font-size: 0.72rem; font-weight: 400; color: var(--saffron-light); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+  .header-badge { margin-left: auto; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 4px 12px; font-size: 0.7rem; color: var(--saffron-light); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* STATS */
+  .stats-bar { background: var(--indigo-light); padding: 1.8rem 2rem; display: flex; gap: 0; flex-wrap: wrap; }
+  .stat { flex: 1; min-width: 140px; text-align: center; position: relative; padding: 0.5rem 1rem; }
+  .stat + .stat::before { content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 1px; background: rgba(255,255,255,0.15); }
+  .stat-number { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 900; color: var(--saffron); line-height: 1; display: block; }
+  .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; display: block; }
+
+  /* LAYOUT */
+  .main { max-width: 1300px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+  /* CARDS */
+  .card { background: var(--white); border-radius: 8px; box-shadow: 0 2px 12px rgba(26,39,68,0.08); overflow: hidden; }
+  .card-header { background: var(--indigo); padding: 0.85rem 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+  .card-header h2 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--white); font-weight: 700; }
+  .card-header .pill { margin-left: auto; background: var(--saffron); color: var(--indigo); font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* MAP */
+  .map-wrap { position: relative; height: 480px; }
+  #leafletMap { width: 100%; height: 100%; }
+  .map-note { position: absolute; bottom: 36px; left: 8px; z-index: 999; background: rgba(26,39,68,0.85); color: #fff; font-size: 0.68rem; padding: 4px 10px; border-radius: 4px; backdrop-filter: blur(4px); pointer-events: none; }
+  .map-legend { padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--border); background: var(--white); font-size: 0.75rem; }
+  .legend-btn { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; font-size: 0.72rem; font-weight: 600; background: var(--slate-bg); color: var(--text); transition: all 0.15s; font-family: 'Noto Sans', sans-serif; }
+  .legend-btn.active { border-color: currentColor; background: white; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* SUMMARY TABLE */
+  .summary-wrap { max-height: 480px; overflow-y: auto; }
+  .summary-wrap::-webkit-scrollbar { width: 5px; }
+  .summary-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  table.summary { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  table.summary thead th { background: var(--slate-mid); color: var(--text-muted); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; text-align: left; position: sticky; top: 0; z-index: 1; }
+  table.summary tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  table.summary tbody tr:hover { background: #EBF3FB; }
+  table.summary tbody tr.active { background: #DDEEFF; }
+  table.summary td { padding: 9px 12px; }
+  table.summary td:last-child { text-align: center; }
+  .bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .bar { height: 7px; border-radius: 4px; background: var(--teal); min-width: 4px; transition: width 0.4s; }
+  .bar-val { font-weight: 700; color: var(--indigo); font-size: 0.85rem; }
+  tfoot td { padding: 9px 12px; background: var(--indigo); color: var(--white); font-weight: 700; font-size: 0.83rem; }
+
+  /* DETAIL */
+  .detail-section { grid-column: 1 / -1; }
+  .detail-controls { padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .village-select { font-family: 'Noto Sans', sans-serif; font-size: 0.85rem; padding: 6px 14px; border: 1px solid var(--border); border-radius: 5px; background: var(--white); color: var(--text); cursor: pointer; outline: none; min-width: 200px; }
+  .village-select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px rgba(58,124,165,0.15); }
+  .filter-info { font-size: 0.78rem; color: var(--text-muted); }
+  .filter-info strong { color: var(--saffron); }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0; }
+  .detail-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--slate-mid); border-right: 1px solid var(--slate-mid); font-size: 0.82rem; transition: background 0.12s; }
+  .detail-item:hover { background: var(--slate-bg); }
+  .detail-num { width: 26px; height: 26px; border-radius: 50%; background: var(--indigo); color: var(--white); font-size: 0.68rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .detail-name { color: var(--text); }
+  .all-btn { background: var(--teal); color: #fff; border: none; border-radius: 5px; padding: 6px 16px; font-family: 'Noto Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .all-btn:hover { background: var(--indigo); }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 1.5rem; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="gov-logo">ಹೊ</div>
+  <h1>
+    Hospete Taluk — Covered Habitations
+    <span>Vijayanagara District · Karnataka</span>
+  </h1>
+  <div class="header-badge">Official Data</div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-number">1</span>
+    <span class="stat-label">Taluk</span>
+  </div>
+  <div class="stat">
+    <span class="stat-number">11</span>
+    <span class="stat-label">Villages</span>
+  </div>
+  <div class="stat">
+    <span class="stat-number">57</span>
+    <span class="stat-label">Covered Habitations</span>
+  </div>
+  <div class="stat">
+    <span class="stat-number">13</span>
+    <span class="stat-label">Max (Chilakanahatti)</span>
+  </div>
+  <div class="stat">
+    <span class="stat-number">1</span>
+    <span class="stat-label">Min (Bukkasagara)</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- MAP -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📍 Village Locations — Hospete Taluk</h2>
+      <span class="pill">Interactive Map</span>
+    </div>
+    <div class="map-wrap">
+      <div id="leafletMap"></div>
+      <div class="map-note">Hospete Taluk · Vijayanagara District · Click a marker for details</div>
+    </div>
+    <div class="map-legend" id="mapLegend"></div>
+  </div>
+
+  <!-- SUMMARY TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📊 Village Summary</h2>
+      <span class="pill">11 Villages</span>
+    </div>
+    <div class="summary-wrap">
+      <table class="summary" id="summaryTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Village</th>
+            <th>Habitations</th>
+            <th>Scale</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">Total</td>
+            <td>57</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- DETAIL TABLE -->
+  <div class="card detail-section">
+    <div class="card-header">
+      <h2>🏘️ Habitation Details</h2>
+      <span class="pill" id="detailPill">All Villages</span>
+    </div>
+    <div class="detail-controls">
+      <select class="village-select" id="villageSelect">
+        <option value="all">All Villages</option>
+      </select>
+      <button class="all-btn" onclick="selectVillage('all')">Show All</button>
+      <span class="filter-info">Showing <strong id="showingCount">57</strong> habitations</span>
+    </div>
+    <div class="detail-grid" id="detailGrid"></div>
+  </div>
+
+</div>
+
+<footer>
+  Data: Hospete Taluk, Vijayanagara District, Karnataka &nbsp;|&nbsp; 11 Villages &nbsp;·&nbsp; 57 Covered Habitations
+</footer>
+
+<script>
+const villages = [
+  { name: "Malpanagudi",      total: 5,  lat: 15.240, lng: 76.340, habitations: ["Hosa Malpamagudi","Malapanagudi","Malapanagudi","Malapanagudi Thanda","Kaddirampura Thanda"] },
+  { name: "Nagenahalli",      total: 8,  lat: 15.310, lng: 76.420, habitations: ["NAGENAHALLI","NAGENAHALLI","BASAVANADURGA","BELAGODU","KALLIRAMPUR","BENAKAPURA","BENAKAPURA THANDA / NAGENAHALLI THANDA","KALAGATTA"] },
+  { name: "Hampi",            total: 2,  lat: 15.335, lng: 76.462, habitations: ["HAMPI","KADIRAMPURA"] },
+  { name: "Kallahalli",       total: 3,  lat: 15.290, lng: 76.380, habitations: ["KALLAHALLI","RAJAPURA","KANIVERAYANA GUDI"] },
+  { name: "PK Halli",         total: 9,  lat: 15.220, lng: 76.410, habitations: ["PAPINAYAKANAHALLI","VADDARAHALLI","BYLUVADDIGERI","KAKUBALU","DHARMASAGAR","GUNDLVADDIGERI","BHUVANAHALLI","GADIGANUR","KOTAGINAHALU"] },
+  { name: "Mariyammanahalli", total: 10, lat: 15.260, lng: 76.450, habitations: ["GALEMMANAGUDI","HANUMANAHALLI","HANUMANAHALLI","114-DANAPURA","112-VENKAPTAPURA","HAMPINAKATTI","AYYANAHALLI","VYASANAKERI","D.N. KERE","DEVALAPURA"] },
+  { name: "76 Venkatapura",   total: 2,  lat: 15.275, lng: 76.395, habitations: ["76 Venktapura","76 Venktapura Camp"] },
+  { name: "Bukkasagara",      total: 1,  lat: 15.230, lng: 76.370, habitations: ["BUKKASAGARA"] },
+  { name: "Ingalagi",         total: 4,  lat: 15.300, lng: 76.355, habitations: ["SEETHARAM THANDA","NALLAPURA","HOSA CHINNAPURA","N.R.CAMP"] },
+  { name: "Chilakanahatti",   total: 13, lat: 15.195, lng: 76.440, habitations: ["G.NAGALAPURA","G.NAGALAPURA TANDA","GUNDA","BYALAKUNDI","GUNDA TANDA","GARAGA","GOLLARAHALLI","CHILAKANAHATTI","HARAVONAHALLI","T.BASAPURA","T.BASAPURA TANDA","THIMLAPURA","POTHALAKATTA"] },
+];
+
+const COLORS = [
+  "#E63946","#2A9D8F","#7B2FBE","#E9822C","#457B9D",
+  "#2D6A4F","#9B2335","#F4A261","#264653","#6A0572","#1D3557"
+];
+
+// ── LEAFLET MAP ──
+const map = L.map('leafletMap', { zoomControl: true }).setView([15.270, 76.400], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 18
+}).addTo(map);
+
+let allMarkers = [];
+let activeFilter = 'all';
+
+function makeIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [14, 14], iconAnchor: [7, 7], popupAnchor: [0, -10]
+  });
+}
+
+villages.forEach((v, i) => {
+  const color = COLORS[i % COLORS.length];
+  const marker = L.marker([v.lat, v.lng], { icon: makeIcon(color) });
+  const habList = v.habitations.map((h, hi) =>
+    `<tr><td style="color:#888;padding:1px 6px 1px 0;font-size:11px">${hi+1}</td><td style="font-size:11px">${h}</td></tr>`
+  ).join('');
+  marker.bindPopup(`
+    <div style="font-family:'Noto Sans',sans-serif;min-width:180px">
+      <div style="font-weight:700;color:#1A2744;font-size:13px;margin-bottom:4px;border-bottom:2px solid ${color};padding-bottom:4px">${v.name}</div>
+      <div style="font-size:11px;color:#5A6A8A;margin-bottom:6px">Total: <strong style="color:${color}">${v.total}</strong> habitations</div>
+      <table style="border-collapse:collapse;width:100%">${habList}</table>
+    </div>
+  `, { maxHeight: 220 });
+  marker.addTo(map);
+  allMarkers.push({ marker, village: v, color, index: i });
+});
+
+// ── LEGEND ──
+const legendEl = document.getElementById('mapLegend');
+
+function buildLegend() {
+  legendEl.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'legend-btn' + (activeFilter === 'all' ? ' active' : '');
+  allBtn.style.color = '#1A2744';
+  allBtn.innerHTML = `<span class="legend-dot" style="background:#1A2744"></span>All (${villages.reduce((s,v)=>s+v.total,0)})`;
+  allBtn.onclick = () => { activeFilter = 'all'; filterMap(); };
+  legendEl.appendChild(allBtn);
+
+  villages.forEach((v, i) => {
+    const color = COLORS[i % COLORS.length];
+    const btn = document.createElement('button');
+    btn.className = 'legend-btn' + (activeFilter === i ? ' active' : '');
+    btn.style.color = color;
+    btn.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${v.name} (${v.total})`;
+    btn.onclick = () => { activeFilter = i; filterMap(); };
+    legendEl.appendChild(btn);
+  });
+}
+
+function filterMap() {
+  allMarkers.forEach(({ marker, index }) => {
+    if (activeFilter === 'all' || activeFilter === index) marker.addTo(map);
+    else map.removeLayer(marker);
+  });
+  if (activeFilter !== 'all') {
+    const v = villages[activeFilter];
+    map.setView([v.lat, v.lng], 13);
+  } else {
+    map.setView([15.270, 76.400], 11);
+  }
+  buildLegend();
+  selectVillage(activeFilter === 'all' ? 'all' : activeFilter);
+}
+
+buildLegend();
+
+// ── SUMMARY TABLE ──
+const maxTotal = Math.max(...villages.map(v => v.total));
+const tbody = document.getElementById('summaryBody');
+villages.forEach((v, i) => {
+  const color = COLORS[i % COLORS.length];
+  const tr = document.createElement('tr');
+  tr.dataset.index = i;
+  tr.innerHTML = `
+    <td style="color:var(--text-muted);font-size:0.75rem">${i+1}</td>
+    <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:6px;vertical-align:middle"></span><strong>${v.name}</strong></td>
+    <td>${v.total}</td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar" style="width:${Math.round((v.total/maxTotal)*110)}px;background:${color}"></div>
+        <span class="bar-val">${v.total}</span>
+      </div>
+    </td>
+  `;
+  tr.addEventListener('click', () => { activeFilter = i; filterMap(); });
+  tbody.appendChild(tr);
+
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${v.name} (${v.total})`;
+  document.getElementById('villageSelect').appendChild(opt);
+});
+
+document.getElementById('villageSelect').addEventListener('change', e => {
+  const val = e.target.value;
+  activeFilter = val === 'all' ? 'all' : +val;
+  filterMap();
+});
+
+function selectVillage(idx) {
+  const grid = document.getElementById('detailGrid');
+  const pill = document.getElementById('detailPill');
+  const count = document.getElementById('showingCount');
+  grid.innerHTML = '';
+
+  document.querySelectorAll('#summaryBody tr').forEach(tr => tr.classList.remove('active'));
+  if (idx !== 'all') document.querySelectorAll('#summaryBody tr')[idx]?.classList.add('active');
+
+  const toShow = idx === 'all'
+    ? villages.flatMap((v, vi) => v.habitations.map((h, hi) => ({ village: v.name, name: h, num: hi+1, color: COLORS[vi % COLORS.length] })))
+    : villages[idx].habitations.map((h, hi) => ({ village: villages[idx].name, name: h, num: hi+1, color: COLORS[idx % COLORS.length] }));
+
+  pill.textContent = idx === 'all' ? 'All Villages' : villages[idx].name;
+  count.textContent = toShow.length;
+
+  toShow.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'detail-item';
+    div.innerHTML = `
+      <div class="detail-num" style="background:${item.color}">${item.num}</div>
+      <div>
+        <div class="detail-name">${item.name || '—'}</div>
+        ${idx === 'all' ? `<div style="font-size:0.68rem;color:var(--text-muted)">${item.village}</div>` : ''}
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+
+  document.getElementById('villageSelect').value = idx === 'all' ? 'all' : idx;
+}
+
+selectVillage('all');
+</script>
+</body>
+</html>
